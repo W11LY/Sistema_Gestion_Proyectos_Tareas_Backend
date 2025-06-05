@@ -1,18 +1,19 @@
-package com.wily.task_manager.Service;
+package com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Service.ServicesImpl;
 
-import com.wily.task_manager.Model.User;
+import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Model.Client;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
-public class CurrentUserService {
+public class CurrentClientService {
 
-    public User getCurrentUser() {
+//    usado para la obtencion del cliente autentificdo actualmente
+    public Client getCurrentClient() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal instanceof User user) {
-            return user;
+        if (principal instanceof Client client) {
+            return client;
         } else {
-            throw new RuntimeException("No se pudo obtener el usuario autenticado");
+            throw new RuntimeException("No se pudo obtener el cliente autenticado");
         }
     }
 }

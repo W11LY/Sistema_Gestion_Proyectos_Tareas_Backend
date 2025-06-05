@@ -1,4 +1,4 @@
-package com.wily.task_manager.Jwt.Config;
+package com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Jwt.Config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

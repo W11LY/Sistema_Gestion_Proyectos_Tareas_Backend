@@ -1,33 +1,33 @@
-package com.wily.task_manager.Jwt.Filter;
+package com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Jwt.Filter;
 
-import com.wily.task_manager.Jwt.Services.JwtService;
-import com.wily.task_manager.Model.User;
-import com.wily.task_manager.Repository.iUserRepository;
+import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Jwt.Services.JwtService;
+import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Model.Client;
+import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Service.iServices.iClientServices;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
+//    inyeccion por constructor de jwt services y client
     final private JwtService jwtService;
-    final private iUserRepository iUserRepository;
+    final private iClientServices clientServices;
 
-    public JwtAuthFilter(JwtService jwtService, iUserRepository iUserRepository) {
+    public JwtAuthFilter(JwtService jwtService, iClientServices clientServices) {
         this.jwtService = jwtService;
-        this.iUserRepository = iUserRepository;
+        this.clientServices = clientServices;
     }
 
+//    filtro de seguridad para jwt validar y autentificar por email almacenado en el token
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -42,14 +42,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         final String jwt = authHeader.substring(7);
-        final String userEmail = jwtService.extractEmail(jwt);
+        final String clientEmail = jwtService.extractEmail(jwt);
 
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            User user = iUserRepository.findByEmail(userEmail).orElse(null);
+        if (clientEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            Client client = clientServices.getClientByEmail(clientEmail);
 
-            if (user != null && jwtService.isTokenValid(jwt, userEmail)) {
+            if (client != null && jwtService.isTokenValid(jwt, clientEmail)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        user, null, List.of(new SimpleGrantedAuthority(user.getRole().name()))
+                        client, null, null
                 );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 

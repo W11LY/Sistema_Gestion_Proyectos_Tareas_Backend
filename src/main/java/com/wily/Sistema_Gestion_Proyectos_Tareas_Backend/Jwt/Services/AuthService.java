@@ -1,11 +1,12 @@
-package com.wily.task_manager.Jwt.Services;
+package com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Jwt.Services;
 
-import com.wily.task_manager.Enums.Role;
-import com.wily.task_manager.Jwt.Dtos.DtoLoginRequest;
-import com.wily.task_manager.Jwt.Dtos.DtoRegisterRequest;
-import com.wily.task_manager.Jwt.Dtos.DtoAuthResponse;
-import com.wily.task_manager.Model.User;
-import com.wily.task_manager.Repository.iUserRepository;
+import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Dtos.Client.DtoClientRequest;
+import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Jwt.Dtos.DtoAuthResponse;
+import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Jwt.Dtos.DtoLoginRequest;
+import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Model.Client;
+import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Repository.iRepository.iClientRepository;
+import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Service.ServicesImpl.CurrentClientService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -14,42 +15,68 @@ import java.util.NoSuchElementException;
 @Service
 public class AuthService {
 
-    private final iUserRepository iUserRepository;
+//    inyeccion por constructor repositorio de client, uso de curren client y services de jwt y password encoder
+    private final iClientRepository clientRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final CurrentClientService currentClientService;
 
-    public AuthService(iUserRepository iUserRepository, JwtService jwtService, PasswordEncoder passwordEncoder) {
-        this.iUserRepository = iUserRepository;
+    public AuthService(iClientRepository clientRepository, JwtService jwtService, PasswordEncoder passwordEncoder, CurrentClientService currentClientService) {
+        this.clientRepository = clientRepository;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
+        this.currentClientService = currentClientService;
     }
 
-    public DtoAuthResponse register(DtoRegisterRequest request) {
-        if (iUserRepository.findByEmail(request.getEmail()).isPresent()) {
+//    validacion de unico correo para la creacion dde client y encriptado de password
+    public DtoAuthResponse register(DtoClientRequest dtoClientRequest) {
+        if (clientRepository.findByEmail(dtoClientRequest.getEmail()).isPresent()) {
             throw new RuntimeException("El email ya está en uso");
         }
 
-        User user = new User();
-        user.setUsername(request.getName());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(Role.USER);
-
-        iUserRepository.save(user);
-
-        String token = jwtService.generateToken(user.getEmail(), user);
+        dtoClientRequest.setPassword(passwordEncoder.encode(dtoClientRequest.getPassword()));
+        clientRepository.save(toEntity(dtoClientRequest));
+        String token = jwtService.generateToken(dtoClientRequest.getEmail());
         return new DtoAuthResponse(token);
+
     }
 
-    public DtoAuthResponse login(DtoLoginRequest request) {
-        User user = iUserRepository.findByEmail(request.getEmail())
+//    validacion de credenciales email y password de loging y retorna token
+    public DtoAuthResponse login(DtoLoginRequest dtoLoginRequest) {
+        Client client = clientRepository.findByEmail(dtoLoginRequest.getEmail())
                 .orElseThrow(() -> new NoSuchElementException("Email o contraseña incorrectos"));
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(dtoLoginRequest.getPassword(), client.getPassword())) {
             throw new RuntimeException("Email o contraseña incorrectos");
         }
 
-        String token = jwtService.generateToken(user.getEmail(), user);
+        String token = jwtService.generateToken(dtoLoginRequest.getEmail());
         return new DtoAuthResponse(token);
+    }
+
+//    validacion de token y estructura existencia de email, verificacion de email en db, expiracion, validae de token
+    public Client validateTokenAndGetClient(String token) {
+        String email = jwtService.extractEmail(token);
+        if (email == null) {
+            throw new RuntimeException("Token sin email");
+        }
+
+        if (!jwtService.isTokenValid(token, email)) {
+            throw new RuntimeException("Token inválido o expirado");
+        }
+
+        return clientRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+    }
+
+//    mappeo de dto a entity usado en create client
+    private Client toEntity(DtoClientRequest dtoClientRequest) {
+        Client client = new Client();
+        client.setNames(dtoClientRequest.getNames());
+        client.setLastnames(dtoClientRequest.getLastnames());
+        client.setPhone(dtoClientRequest.getPhone());
+        client.setEmail(dtoClientRequest.getEmail());
+        client.setPassword(dtoClientRequest.getPassword());
+        return client;
     }
 }

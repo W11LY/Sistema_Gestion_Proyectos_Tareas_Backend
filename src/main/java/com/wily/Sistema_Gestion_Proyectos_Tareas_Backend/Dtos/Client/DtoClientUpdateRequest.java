@@ -10,6 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class DtoClientUpdateRequest {
+//    uso de dto por seguridad y manejo de validaciones de campos
 
     @NotBlank(message = "Los nombres son obligatorios")
     @Size(min = 2, max = 50, message = "Los nombres deben tener entre 2 y 50 caracteres")

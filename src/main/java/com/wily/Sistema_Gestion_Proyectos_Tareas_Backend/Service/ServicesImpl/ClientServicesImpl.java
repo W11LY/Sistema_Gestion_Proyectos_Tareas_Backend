@@ -1,48 +1,64 @@
 package com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Service.ServicesImpl;
 
-import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Model.User;
-import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Repository.iRepository.iUserRepository;
-import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Service.iServices.iUserServices;
+import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Model.Client;
+import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Repository.iRepository.iClientRepository;
+import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Service.iServices.iClientServices;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
-public class UserServicesImpl implements iUserServices {
+public class ClientServicesImpl implements iClientServices {
 
-    private final iUserRepository userRepository;
+//    inyeccion por constructor de repositorio, password encoder para la contrase;a y currentclient para la obtencion del cliente actual autentificado
+    private final iClientRepository userRepository;
+    private final CurrentClientService currentClientService;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServicesImpl(iUserRepository userRepository) {
+    public ClientServicesImpl(iClientRepository userRepository, CurrentClientService currentClientService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.currentClientService = currentClientService;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+//    busqueda por id y control de existencia de client
+    @Override
+    public Client getClientById() {
+        return userRepository.findById(currentClientService.getCurrentClient().getClientId())
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
     }
 
     @Override
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public void createClient(Client client) {
+        userRepository.save(client);
     }
 
+//    update con id optenido por current client el cliente autentificado
     @Override
-    public User getUserById(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    public void updateClient(Client client) {
+        client.setClientId(currentClientService.getCurrentClient().getClientId());
+        userRepository.update(client);
     }
 
+//    delete con id optenido por current client el cliente autentificado
     @Override
-    public void createUser(User user) {
-        userRepository.save(user);
+    public void deleteClient() {
+        userRepository.deleteById(currentClientService.getCurrentClient().getClientId());
     }
 
+//    obtencion de client y verificacion de existencia por email
     @Override
-    public void updateUser(User user) {
-        if (!userRepository.findById(user.getUserId()).isPresent()) {
-            throw new RuntimeException("Usuario no existe");
+    public Client getClientByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+    }
+
+//    update de password y encriptacion usando password encoder asi como validacion de password actual con la almacenada
+    @Override
+    public void updateClientPassword(String passwordOld, String passwordNew) {
+        Client client = currentClientService.getCurrentClient();
+        if (!passwordEncoder.matches(passwordOld, client.getPassword())) {
+            throw new RuntimeException("Email o contraseña incorrectos");
         }
-        userRepository.update(user);
+        userRepository.updatePassword(passwordEncoder.encode(passwordNew), client.getClientId());
     }
-
-    @Override
-    public void deleteUser(Long id) {
-        userRepository.deleteById(id);
-    }
-
 }

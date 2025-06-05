@@ -1,4 +1,4 @@
-package com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Dtos.User;
+package com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Dtos.Client;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -9,7 +9,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class DtoUserRequest {
+public class DtoClientRequest {
+//    uso de dto por seguridad y manejo de validaciones de campos
 
     @NotBlank(message = "Los nombres son obligatorios")
     @Size(min = 2, max = 50, message = "Los nombres deben tener entre 2 y 50 caracteres")
@@ -18,10 +19,6 @@ public class DtoUserRequest {
     @NotBlank(message = "Los apellidos son obligatorios")
     @Size(min = 2, max = 50, message = "Los apellidos deben tener entre 2 y 50 caracteres")
     private String lastnames;
-
-    @NotBlank(message = "La cédula es obligatoria")
-    @Pattern(regexp = "\\d{10}", message = "La cédula debe tener exactamente 10 dígitos numéricos")
-    private String card;
 
     @NotBlank(message = "El teléfono es obligatorio")
     @Pattern(regexp = "\\d{10}", message = "El telefono debe tener exactamente 10 dígitos numéricos")
@@ -33,7 +30,7 @@ public class DtoUserRequest {
     private String email;
 
     @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 8, max = 100, message = "La contraseña debe tener al menos 8 caracteres")
+    @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
     @Pattern(
             regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&.])[A-Za-z\\d@$!%*?&.]{8,}$",
             message = "La contraseña debe contener al menos una mayúscula, una minúscula, un número y un carácter especial"

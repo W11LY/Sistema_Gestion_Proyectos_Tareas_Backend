@@ -1,6 +1,5 @@
-package com.wily.task_manager.Jwt.Services;
+package com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Jwt.Services;
 
-import com.wily.task_manager.Model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -43,10 +42,9 @@ public class JwtService {
     }
 
 //    Genera el Jwt  con HS256 y secret key
-    public String generateToken(String email, User user) {
+    public String generateToken(String email) {
         return Jwts.builder()
                 .setSubject(email)
-                .claim("role", user.getRole().name())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)

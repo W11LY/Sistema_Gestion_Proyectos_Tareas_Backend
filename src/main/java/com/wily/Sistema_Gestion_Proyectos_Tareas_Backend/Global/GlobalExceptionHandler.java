@@ -1,4 +1,4 @@
-package com.wily.scoring_crediticio.Global;
+package com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Global;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +11,8 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+//Manejo global de exepciones de valid de dto
+//    commentar para usar swagger web
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationErrors(MethodArgumentNotValidException ex) {

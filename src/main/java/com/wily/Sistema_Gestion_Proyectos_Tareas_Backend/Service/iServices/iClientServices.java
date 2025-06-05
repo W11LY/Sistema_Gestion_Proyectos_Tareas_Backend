@@ -1,15 +1,14 @@
 package com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Service.iServices;
 
-import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Model.User;
+import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Model.Client;
 
-import java.util.List;
+public interface iClientServices {
 
-public interface iUserServices {
-
-    List<User> getAllUsers();
-    User getUserById(Long id);
-    void createUser(User user);
-    void updateUser(User user);
-    void deleteUser(Long id);
+    Client getClientById();
+    void createClient(Client client);
+    void updateClient(Client client);
+    void deleteClient();
+    Client getClientByEmail(String email);
+    void updateClientPassword(String passwordOld, String passwordNew);
 
 }

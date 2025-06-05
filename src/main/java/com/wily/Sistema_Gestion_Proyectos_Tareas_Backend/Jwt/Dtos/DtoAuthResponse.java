@@ -1,4 +1,4 @@
-package com.wily.task_manager.Jwt.Dtos;
+package com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Jwt.Dtos;
 
 
 public class DtoAuthResponse {

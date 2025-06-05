@@ -1,58 +1,77 @@
 package com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Repository.RepositoryImpl;
 
-import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Model.User;
-import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Repository.iRepository.iUserRepository;
-import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.RowMapper.UserRowMapper;
+import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Model.Client;
+import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Repository.iRepository.iClientRepository;
+import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.RowMapper.ClientRowMapper;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class UserRepository implements iUserRepository {
+public class ClientRepository implements iClientRepository {
 
+//    inyeccion por constructor de jdbc
     private final JdbcTemplate jdbc;
-    private final UserRowMapper rowMapper = new UserRowMapper();
+    private final ClientRowMapper rowMapper = new ClientRowMapper();
 
-    public UserRepository(JdbcTemplate jdbc) {
+    public ClientRepository(JdbcTemplate jdbc) {
         this.jdbc = jdbc;
     }
 
+//    busqueda por id usada para el profile
     @Override
-    public List<User> findAll() {
-        return jdbc.query("SELECT * FROM users", rowMapper);
-    }
-
-    @Override
-    public Optional<User> findById(Long id) {
+    public Optional<Client> findById(Long id) {
         try {
             return Optional.ofNullable(
-                    jdbc.queryForObject("SELECT * FROM users WHERE user_id = ?", rowMapper, id));
+                    jdbc.queryForObject("SELECT * FROM client WHERE client_id = ?", rowMapper, id));
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
     }
 
+//    creacion de client
     @Override
-    public void save(User user) {
+    public void save(Client client) {
         jdbc.update("""
-            INSERT INTO users (names, lastnames, card, phone, email, password)
+            INSERT INTO client (names, lastnames, phone, email, password)
             VALUES (?, ?, ?, ?, ?)
-        """, user.getNames(), user.getLastnames(), user.getCard(), user.getPhone(), user.getEmail());
+        """, client.getNames(), client.getLastnames(), client.getPhone(), client.getEmail(), client.getPassword());
     }
 
+//    update de client sin el atributo password se realiza por separado
     @Override
-    public void update(User user) {
+    public void update(Client client) {
         jdbc.update("""
-            UPDATE users SET names = ?, lastnames = ?, card = ?, phone = ?, email = ?
-            WHERE user_id = ?
-        """, user.getNames(), user.getLastnames(), user.getCard(), user.getPhone(), user.getEmail(), user.getUserId());
+            UPDATE client SET names = ?, lastnames = ?, phone = ?, email = ?
+            WHERE client_id = ?
+        """, client.getNames(), client.getLastnames(), client.getPhone(), client.getEmail(), client.getClientId());
     }
 
+//    delete de client por id
     @Override
     public void deleteById(Long id) {
-        jdbc.update("DELETE FROM users WHERE user_id = ?", id);
+        jdbc.update("DELETE FROM client WHERE client_id = ?", id);
+    }
+
+//    busqueda de client por email usada principalmente para jwt
+    @Override
+    public Optional<Client> findByEmail(String email) {
+        try {
+            return Optional.ofNullable(
+                    jdbc.queryForObject("SELECT * FROM client WHERE email = ?", rowMapper, email));
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
+
+//    metodo separado de actualizacion de password
+    @Override
+    public void updatePassword(String password, Long clientId) {
+        jdbc.update("""
+            UPDATE client SET password = ?
+            WHERE client_id = ?
+        """, password, clientId);
     }
 }
