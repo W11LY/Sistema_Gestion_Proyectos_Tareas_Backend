@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/wily/api/client")
@@ -37,10 +38,16 @@ public class ClientController {
 
 //    update de client maneja otro dto por la password no retorna objeto retorna status nocontent
     @PutMapping
-    public ResponseEntity<Void> update(@RequestBody @Valid DtoClientUpdateRequest dtoClientUpdateRequest) {
-        Client client = toEntityUpdate(dtoClientUpdateRequest);
-        clientServices.updateClient(client);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> update(@RequestBody @Valid DtoClientUpdateRequest dtoClientUpdateRequest) {
+        try{
+            Client client = toEntityUpdate(dtoClientUpdateRequest);
+            clientServices.updateClient(client);
+            return ResponseEntity.noContent().build();
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(ex.getReason());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error inesperado");
+        }
     }
 
 //    delete de client no retorna object retorna status no content
@@ -52,15 +59,27 @@ public class ClientController {
 
 //    busqueda por email y verificacion de existencia de client
     @GetMapping("/{email}")
-    public ResponseEntity<DtoClientResponse> getByEmail(@PathVariable String email) {
-        return ResponseEntity.ok(toResponse(clientServices.getClientByEmail(email)));
+    public ResponseEntity<?> getByEmail(@PathVariable String email) {
+        try{
+            return ResponseEntity.ok(toResponse(clientServices.getClientByEmail(email)));
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(ex.getReason());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error inesperado");
+        }
     }
 
 //    update de password resive password actual y nueva retorna un status no content
     @PutMapping("/password")
-    public ResponseEntity<Void> update(@RequestBody @Valid DtoPasswordUpdateRequest dtoClientUpdateRequest) {
-        clientServices.updateClientPassword(dtoClientUpdateRequest.getPasswordOld(), dtoClientUpdateRequest.getPasswordNew());
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> update(@RequestBody @Valid DtoPasswordUpdateRequest dtoClientUpdateRequest) {
+        try{
+            clientServices.updateClientPassword(dtoClientUpdateRequest.getPasswordOld(), dtoClientUpdateRequest.getPasswordNew());
+            return ResponseEntity.noContent().build();
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(ex.getReason());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error inesperado");
+        }
     }
 
 //    mappeo de entity a dto para response

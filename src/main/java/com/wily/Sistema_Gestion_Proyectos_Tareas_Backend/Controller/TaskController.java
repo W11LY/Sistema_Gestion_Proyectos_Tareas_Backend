@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -16,35 +17,59 @@ import java.util.List;
 @RequestMapping("/wily/api/tasks")
 public class TaskController {
 
+//    injeccion por controlador de service task
     private final iTaskServices taskServices;
 
     public TaskController(iTaskServices taskServices) {
         this.taskServices = taskServices;
     }
 
-    @PostMapping
-    public ResponseEntity<DtoTaskResponse> create(@RequestBody @Valid DtoTaskRequest dtoTaskRequest) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(taskServices.create(toEntity(dtoTaskRequest))));
+    //    busqueda por id de task
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getById(@PathVariable Long id) {
+        try{
+            return ResponseEntity.ok(toResponse(taskServices.getTaskById(id)));
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(ex.getReason());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error inesperado");
+        }
     }
 
+//    creacion de task y control de project exista
+    @PostMapping
+    public ResponseEntity<?> create(@RequestBody @Valid DtoTaskRequest dtoTaskRequest) {
+        try{
+            return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(taskServices.create(toEntity(dtoTaskRequest))));
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(ex.getReason());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error inesperado");
+        }
+    }
+
+//    actualizacion de task retorna no content
     @PutMapping("/{taskId}")
     public ResponseEntity<Void> update(@Valid @RequestBody DtoTaskRequest dtoTaskRequest, @PathVariable Long taskId) {
         taskServices.update(toEntity(dtoTaskRequest), taskId);
         return ResponseEntity.noContent().build();
     }
 
+//    actualizacion unicamente de state de tarea
     @PutMapping("/{taskId}/{state}")
     public ResponseEntity<Void> updateState(@PathVariable Long taskId, @PathVariable Boolean state) {
         taskServices.updateState(taskId, state);
         return ResponseEntity.noContent().build();
     }
 
+//    eliminacion de tares no retorna object soo o content
     @DeleteMapping("/{taskId}")
     public ResponseEntity<Void> delete(@PathVariable Long taskId) {
         taskServices.delete(taskId);
         return ResponseEntity.noContent().build();
     }
 
+//    obtencion todas las tareas del proyecto por id
     @GetMapping("/{id}/tasks")
     public ResponseEntity<List<DtoTaskResponse>> getTasksByProject(@PathVariable Long id) {
         List<Task> tasks = taskServices.findByProjectId(id);
@@ -62,6 +87,7 @@ public class TaskController {
     }
 
 
+//    mappeo de entity a dto para response
     private DtoTaskResponse toResponse(Task task) {
         DtoTaskResponse dtoTaskResponse = new DtoTaskResponse();
         dtoTaskResponse.setTaskId(task.getTaskId());
@@ -72,6 +98,7 @@ public class TaskController {
         return dtoTaskResponse;
     }
 
+//    mappeo de response a entity por dto
     private Task toEntity(DtoTaskRequest dtoTaskRequest) {
         Task task = new Task();
         task.setTitle(dtoTaskRequest.getTitle());

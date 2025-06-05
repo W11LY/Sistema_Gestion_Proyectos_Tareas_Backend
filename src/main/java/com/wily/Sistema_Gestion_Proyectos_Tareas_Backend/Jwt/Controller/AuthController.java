@@ -7,8 +7,10 @@ import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Jwt.Services.AuthServic
 import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Model.Client;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/wily/api/auth")
@@ -22,15 +24,27 @@ public class AuthController {
 
 //    registro de client con password encriptada
     @PostMapping("/register")
-    public ResponseEntity<Void> register(@Valid @RequestBody DtoClientRequest request) {
-        authService.register(request);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> register(@Valid @RequestBody DtoClientRequest request) {
+         try{
+            authService.register(request);
+            return ResponseEntity.noContent().build();
+         } catch (ResponseStatusException ex) {
+             return ResponseEntity.status(ex.getStatusCode()).body(ex.getReason());
+         } catch (Exception ex) {
+             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error inesperado");
+         }
     }
 
 //    validacion de loging y generacion de token
     @PostMapping("/login")
-    public ResponseEntity<DtoAuthResponse> login(@Valid @RequestBody DtoLoginRequest request) {
-        return ResponseEntity.ok(authService.login(request));
+    public ResponseEntity<?> login(@Valid @RequestBody DtoLoginRequest request) {
+        try {
+            return ResponseEntity.ok(authService.login(request));
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(ex.getReason());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error inesperado");
+        }
     }
 
 //    validacion de token y expiracion
@@ -47,8 +61,10 @@ public class AuthController {
         try {
             Client client = authService.validateTokenAndGetClient(token);
             return ResponseEntity.ok(client);
-        } catch (Exception e) {
-            return ResponseEntity.status(401).body(e.getMessage());
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(ex.getReason());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error inesperado");
         }
     }
 

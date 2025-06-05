@@ -6,7 +6,9 @@ import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Model.Task;
 import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Repository.iRepository.iProjectRepository;
 import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Repository.iRepository.iTaskRepository;
 import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Service.iServices.iProjectServices;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -27,7 +29,8 @@ public class ProjectServicesImpl  implements iProjectServices {
 //    busqueda por id de project y control de existencia
     @Override
     public Project getProjectById(Long id) {
-        Project project = projectRepository.findById(id).orElseThrow(() -> new RuntimeException("Proyecto no encontrado"));
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Proyecto no encontrado"));
         List<Task> tasks = taskRepository.findByProjectId(id);
         project.setTasks(tasks);
         return project;
@@ -45,7 +48,7 @@ public class ProjectServicesImpl  implements iProjectServices {
     @Override
     public void update(Project project) {
         if (!projectRepository.findById(project.getProjectId()).isPresent()) {
-            throw new RuntimeException("Proyecto no existe");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Proyecto no encontrado");
         }
         project.setClient(currentClientService.getCurrentClient());
         projectRepository.update(project);
@@ -54,6 +57,9 @@ public class ProjectServicesImpl  implements iProjectServices {
 //    eliminacion por id de project
     @Override
     public void delete(Long id) {
+        if (!projectRepository.findById(id).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Proyecto no encontrado");
+        }
         projectRepository.deleteById(id);
     }
 

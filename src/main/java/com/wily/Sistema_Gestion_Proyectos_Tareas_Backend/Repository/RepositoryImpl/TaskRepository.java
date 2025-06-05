@@ -1,8 +1,10 @@
 package com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Repository.RepositoryImpl;
 
+import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Model.Project;
 import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Model.Task;
 import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Repository.iRepository.iTaskRepository;
 import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.RowMapper.TaskRowMapper;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class TaskRepository implements iTaskRepository {
@@ -21,6 +24,17 @@ public class TaskRepository implements iTaskRepository {
 
     public TaskRepository(JdbcTemplate jdbc) {
         this.jdbc = jdbc;
+    }
+    //busqueda de tarea por id
+    @Override
+    public Optional<Task> findById(Long id) {
+        try {
+            return Optional.ofNullable(
+                    jdbc.queryForObject("SELECT * FROM task WHERE task_id = ?", rowMapper, id)
+            );
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
     }
 
 //    creacion de task y condiguracion para la obtencion del objeto creado

@@ -5,7 +5,9 @@ import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Model.Task;
 import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Repository.iRepository.iProjectRepository;
 import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Repository.iRepository.iTaskRepository;
 import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Service.iServices.iTaskServices;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -21,11 +23,19 @@ public class TaskServicesImpl implements iTaskServices {
         this.projectRepository = projectRepository;
     }
 
+    //    busqueda por id de project y control de existencia
+    @Override
+    public Task getTaskById(Long id) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Tarea no encontrado"));
+        return task;
+    }
+
 //    creacion de task y enlace con project y verificacion de existencia de project
     @Override
     public Task create(Task task) {
         Project project = projectRepository.findById(task.getProject().getProjectId())
-                .orElseThrow(() -> new RuntimeException("Proyecto no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Proyecto no encontrado"));
         task.setProject(project);
         return taskRepository.save(task);
     }

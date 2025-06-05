@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -25,8 +26,14 @@ public class ProjectController {
 
 //    busqueda por id de project
     @GetMapping("/{id}")
-    public ResponseEntity<DtoProjectResponse> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(toResponse(projectServices.getProjectById(id)));
+    public ResponseEntity<?> getById(@PathVariable Long id) {
+        try{
+            return ResponseEntity.ok(toResponse(projectServices.getProjectById(id)));
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(ex.getReason());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error inesperado");
+        }
     }
 
 //    creacion de project y enlase a client respectivo retorna object project
@@ -37,18 +44,30 @@ public class ProjectController {
 
 //    update de project id se resive por url y se actualiza en el objeto
     @PutMapping("/{id}")
-    public ResponseEntity<Void> update(@PathVariable Long id, @RequestBody @Valid DtoProjectRequest dtoProjectRequest) {
-        Project project = toEntity(dtoProjectRequest);
-        project.setProjectId(id);
-        projectServices.update(project);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody @Valid DtoProjectRequest dtoProjectRequest) {
+        try{
+           Project project = toEntity(dtoProjectRequest);
+           project.setProjectId(id);
+           projectServices.update(project);
+           return ResponseEntity.noContent().build();
+       } catch (ResponseStatusException ex) {
+           return ResponseEntity.status(ex.getStatusCode()).body(ex.getReason());
+       } catch (Exception ex) {
+           return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error inesperado");
+       }
     }
 
 //    eliminacion del projecto por id retorna status no content
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        projectServices.delete(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        try{
+            projectServices.delete(id);
+            return ResponseEntity.noContent().build();
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(ex.getReason());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error inesperado");
+        }
     }
 
 //    busqueda de todos los projectos enlasados a un cliente id retorna lista de project

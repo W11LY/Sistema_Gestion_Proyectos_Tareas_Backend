@@ -13,7 +13,7 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    private static final String SECRET_KEY = "mi_clave_secreta_12345678901234567890123456789012"; // debe tener al menos 32 bytes
+    private static final String SECRET_KEY = "12345678901234567890123456789012";
     private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 24;
 
 //    Transforma la secret key a una clave criptografica para firmar

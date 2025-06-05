@@ -6,9 +6,11 @@ import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Jwt.Dtos.DtoLoginReques
 import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Model.Client;
 import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Repository.iRepository.iClientRepository;
 import com.wily.Sistema_Gestion_Proyectos_Tareas_Backend.Service.ServicesImpl.CurrentClientService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.NoSuchElementException;
 
@@ -31,7 +33,7 @@ public class AuthService {
 //    validacion de unico correo para la creacion dde client y encriptado de password
     public DtoAuthResponse register(DtoClientRequest dtoClientRequest) {
         if (clientRepository.findByEmail(dtoClientRequest.getEmail()).isPresent()) {
-            throw new RuntimeException("El email ya está en uso");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "El email ya está en uso");
         }
 
         dtoClientRequest.setPassword(passwordEncoder.encode(dtoClientRequest.getPassword()));
@@ -44,10 +46,10 @@ public class AuthService {
 //    validacion de credenciales email y password de loging y retorna token
     public DtoAuthResponse login(DtoLoginRequest dtoLoginRequest) {
         Client client = clientRepository.findByEmail(dtoLoginRequest.getEmail())
-                .orElseThrow(() -> new NoSuchElementException("Email o contraseña incorrectos"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email o Contraseña incorrectos"));
 
         if (!passwordEncoder.matches(dtoLoginRequest.getPassword(), client.getPassword())) {
-            throw new RuntimeException("Email o contraseña incorrectos");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email o Contraseña incorrectos");
         }
 
         String token = jwtService.generateToken(dtoLoginRequest.getEmail());
@@ -58,15 +60,15 @@ public class AuthService {
     public Client validateTokenAndGetClient(String token) {
         String email = jwtService.extractEmail(token);
         if (email == null) {
-            throw new RuntimeException("Token sin email");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token sin email");
         }
 
         if (!jwtService.isTokenValid(token, email)) {
-            throw new RuntimeException("Token inválido o expirado");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token invalido o expirado");
         }
 
         return clientRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cliente no encontrado"));
     }
 
 //    mappeo de dto a entity usado en create client
